@@ -1,0 +1,48 @@
+#!/bin/bash
+
+# Get name of script
+CMD="${0##*/}"
+
+# Prints usage
+function usage() {
+    cat 1>&2 <<EOF
+
+     Removes a partition previously added with fsm-add-partition using the FSM fabric manager
+
+     ${CMD} -p <partition_name>
+
+     where:
+	    -p <partition_name> 
+                              The name of the partition (e.g. a interfaceid_jobid)
+
+EOF
+
+    exit 1;
+}
+
+unset NAME
+
+while getopts p: ARG "$@"; do
+    case "$ARG" in
+	p)
+	    NAME="$OPTARG";
+	    ;;	
+        *)
+	    usage
+            exit 1
+            ;;
+    esac
+done
+
+unset MISSINGARGS
+if [[ -z "$NAME" ]]; then
+    MISSINGARGS="-p <partition_name>XXX$MISSINGARGS";
+fi
+
+if [[ ! -z "$MISSINGARGS" ]]; then 
+    echo "Missing the following mandatory options: " 1>&2;
+    echo -e "${MISSINGARGS//XXX/\\n}" 1>&2;
+    exit 1;
+fi
+
+curl -X DELETE --header 'Accept: application/json' "${SFS_FSM_ADD_PARTITION_BASEURL}/api/partitions/jobs/${NAME}"

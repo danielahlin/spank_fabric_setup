@@ -1,0 +1,68 @@
+#!/bin/bash
+
+# Get name of script
+CMD="${0##*/}"
+
+# Prints usage
+function usage() {
+    cat 1>&2 <<EOF
+
+     Creates a new partition with the specified members using the FSM fabric manager
+
+     ${CMD} -i <interface_id> -m <member_1,member_2,...,member_n> -p <partition_name>
+
+     where:
+            -i <interfaceid>  is the interface_id that should be treated
+
+            -m <member_1,member_2,...,member_n>
+                              fabric addresses to be made members
+
+	    -p <partition_name> 
+                              The name of the partition (e.g. a interfaceid_jobid)
+
+     Prints the partition key on STDOUT if successfull
+
+EOF
+
+    exit 1;
+}
+
+unset INTERFACE_ID MEMBERS NAME
+
+while getopts i:m:p: ARG "$@"; do
+    case "$ARG" in
+	i)
+	    INTERFACE_ID="$OPTARG";
+	    ;;
+	m)
+	    MEMBERS="$OPTARG";
+	    ;;
+	p)
+	    NAME="$OPTARG";
+	    ;;	
+        *)
+	    usage
+            exit 1
+            ;;
+    esac
+done
+
+unset MISSINGARGS
+# Check that we have all needed options:
+if [[ -z "$INTERFACE_ID" ]]; then
+    MISSINGARGS="-i <interface_id>XXX$MISSINGARGS";
+fi
+if [[ -z "$MEMBERS" ]]; then
+    MISSINGARGS="-m <member_1,member_2,...,member_n>XXX$MISSINGARGS";
+fi
+if [[ -z "$NAME" ]]; then
+    MISSINGARGS="-p <partition_name>XXX$MISSINGARGS";
+fi
+
+if [[ ! -z "$MISSINGARGS" ]]; then 
+    echo "Missing the following mandatory options: " 1>&2;
+    echo -e "${MISSINGARGS//XXX/\\n}" 1>&2;
+    exit 1;
+fi
+
+curl -s -X PUT --header 'Content-Type: application/json' --header 'Accept: application/json' "${SFS_FSM_ADD_PARTITION_BASEURL}/api/partitions/jobs/${NAME}" -d@- <<< '{ "port_list": [ { "node_membership": "full", "node_id": "'${MEMBERS//,/\" \}, \{ \"node_membership\": \"full\", \"node_id\": \"}\"' } ], "ipoib": true }' | json_reformat |sed -n 's/^[[:blank:]]*"key":[[:blank:]]*"\([^"]*\)".*/\1/p'

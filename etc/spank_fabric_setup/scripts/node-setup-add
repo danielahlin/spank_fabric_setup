@@ -1,0 +1,66 @@
+#!/bin/bash
+
+# Get name of script
+CMD="${0##*/}"
+
+# Prints usage
+function usage() {
+    cat 1>&2 <<EOF
+
+     Configures the nodes in the job to use the new partition
+
+     ${CMD} -i <interface_id> -n <node_1,node_2,...,node_n> -p <partition_identifier>
+
+     where:
+            -i <interfaceid>  is the interface_id that the partition is setup for
+
+            -n <node_1,node_2,...,node_n>
+                              nodes to setup
+
+	    -p <partition_name> 
+                              The name of the partition (e.g. a interfaceid_jobid)
+
+EOF
+
+    exit 1;
+}
+
+unset INTERFACE_ID NODES NAME
+
+while getopts i:n:p: ARG "$@"; do
+    case "$ARG" in
+	i)
+	    INTERFACE_ID="$OPTARG";
+	    ;;
+	n)
+	    NODES="$OPTARG";
+	    ;;
+	p)
+	    NAME="$OPTARG";
+	    ;;	
+        *)
+	    usage
+            exit 1
+            ;;
+    esac
+done
+
+unset MISSINGARGS
+# Check that we have all needed options:
+if [[ -z "$INTERFACE_ID" ]]; then
+    MISSINGARGS="-i <interface_id>XXX$MISSINGARGS";
+fi
+if [[ -z "$NODES" ]]; then
+    MISSINGARGS="-n <node_1,node_2,...,node_n>XXX$MISSINGARGS";
+fi
+if [[ -z "$NAME" ]]; then
+    MISSINGARGS="-p <partition_name>XXX$MISSINGARGS";
+fi
+
+if [[ ! -z "$MISSINGARGS" ]]; then 
+    echo "Missing the following mandatory options: " 1>&2;
+    echo -e "${MISSINGARGS//XXX/\\n}" 1>&2;
+    exit 1;
+fi
+
+

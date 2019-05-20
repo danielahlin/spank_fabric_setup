@@ -1,0 +1,52 @@
+#!/bin/bash
+
+CMD=$(basename $0)
+
+function usage() {
+    cat <<EOF
+Usage: $CMD --spank_fabric_partition_create_adhoc="ib0:1" --spank_fabric_partition_join="" --spank_fabric_partition_bind_mpi=""
+
+EOF
+}
+
+unset SPANK_FABRIC_PARTITION_CREATE_ADHOC_OPT
+
+SPANK_FABRIC_PARTITION_CREATE_ADHOC_OPT=0
+SPANK_FABRIC_PARTITION_JOIN_OPT=0
+SPANK_FABRIC_PARTITION_BIND_MPI_OPT=0
+
+OPTS=0
+while [[ $1 == -* ]]; do
+    OPTS=$(($OPTS + 1))
+    case "$1" in
+        --help) 
+            usage
+            exit;
+            ;;
+        --spank_fabric_partition_create_adhoc=*) 
+            SPANK_FABRIC_PARTITION_CREATE_ADHOC_OPT=1
+            SPANK_FABRIC_PARTITION_CREATE_ADHOC=${1/--spank_fabric_partition_create_adhoc=/}
+            shift
+            ;;
+        --spank_fabric_partition_join=*) 
+            SPANK_FABRIC_PARTITION_JOIN_OPT=1	    
+            SPANK_FABRIC_PARTITION_JOIN=${1/--spank_fabric_partition_join=/}
+	    shift
+            ;;
+        --spank_fabric_partition_bind_mpi=*)
+            SPANK_FABRIC_PARTITION_BIND_MPI_OPT=1
+            SPANK_FABRIC_PARTITION_BIND_MPI=${1/--spank_fabric_partition_bind_mpi=/}
+            shift
+            ;;
+        *) 
+            echo "$CMD: Unknown option $1" 2>&1
+            exit 1 
+            ;;
+    esac
+done
+
+if [[ $((SPANK_FABRIC_PARTITION_BIND_MPI_OPT + SPANK_FABRIC_PARTITION_JOIN_OPT + SPANK_FABRIC_PARTITION_CREATE_ADHOC_OPT)) != 3 ]]; then
+    echo "All of --spank_fabric_partition_create_adhoc, --spank_fabric_partition_join and --spank_fabric_partition_bind_mpi must be specified" 1>&2;
+    exit 1;
+fi
+

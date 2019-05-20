@@ -1,0 +1,82 @@
+#!/bin/bash
+
+# Get name of script
+CMD="${0##*/}"
+
+# Prints usage
+function usage() {
+    cat 1>&2 <<EOF
+
+    Returns member addresses of the designated nodes
+
+     ${CMD} -i <interface_id> -n <node_1,node_2,...,node_n>
+
+     where:
+            -i <interfaceid>  is the interface_id that should be treated
+
+            -n <node_1,node_2,...,node_n>
+                              nodes for which to return addresses
+	    -s                Adds addresses for intermediaries (e.g. switches)
+
+EOF
+
+    exit 1;
+}
+
+unset INTERFACE_ID NODES INTERMEDIARIES
+
+while getopts i:n:s ARG "$@"; do
+    case "$ARG" in
+	i)
+	    INTERFACE_ID="$OPTARG";
+	    ;;
+	n)
+	    NODES="$OPTARG";
+	    ;;
+	s)
+	    INTERMEDIARIES=yes;
+	    ;;
+        *)
+	    usage
+            exit 1
+            ;;
+    esac
+done
+
+unset MISSINGARGS
+# Check that we have all needed options:
+if [[ -z "$INTERFACE_ID" ]]; then
+    MISSINGARGS="-i <interface_id>XXX$MISSINGARGS";
+fi
+if [[ -z "$NODES" ]]; then
+    MISSINGARGS="-n <node_1,node_2,...,node_n>XXX$MISSINGARGS";
+fi
+
+if [[ ! -z "$MISSINGARGS" ]]; then 
+    echo "Missing the following mandatory options: " 1>&2;
+    echo -e "${MISSINGARGS//XXX/\\n}" 1>&2;
+    exit 1;
+fi
+
+# Check that map file exists
+if [[ ! -r ${SFS_COLLECT_NODE_IDS_MAP} ]]; then
+    echo "Unable to read node id map file \"${SFS_COLLECT_NODE_IDS_MAP}\"" 1>&2
+    exit 1;
+fi
+
+if [[ "$INTERMEDIARIES" == "yes" ]]; then
+    NODES="$NODES,switch"
+fi
+
+# Map node/interface id to addresses
+egrep "^(${NODES//,/|}):${INTERFACE_ID}" "${SFS_COLLECT_NODE_IDS_MAP}" | cut -d: -f3 
+res=$?
+
+# NOTE that the no match or only partial match is not considered an
+# error by egrep - possibly we should consider it an error here but it
+# is probably better handled in above layers
+
+if [[ $res != 0 ]]; then
+    echo "Error mapping node id and interface ids to addresses using  map file \"${SFS_COLLECT_NODE_IDS_MAP}\"" 1>&2
+    exit 1;
+fi

@@ -1,0 +1,5 @@
+# Sample node-id-map
+example-1:mlx4_0-1:0x123456789abcdef1
+example-2:mlx4_0-1:0x123456789abcdef2
+example-3:mlx4_0-1:0x123456789abcdef3
+switch:mlx4_0-1:0x123456789abcdef4
