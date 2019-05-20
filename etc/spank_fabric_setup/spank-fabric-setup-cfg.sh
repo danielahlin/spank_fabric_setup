@@ -22,3 +22,5 @@ export SFS_NODE_LEAVE="${SFS_CONF_DIR}/scripts/node-setup-leave"
 # Defaults
 export SFS_FABRIC_DEFAULT_INTERFACEID=mlx4_0-1
 
+# DNS defaults
+export SFS_FABRIC_DOMAIN=example.net

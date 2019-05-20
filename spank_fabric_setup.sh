@@ -22,7 +22,7 @@ exit_handler()
 }
 
 
-# Ignore if this is called without any span_fabric environment variable set
+# Ignore if this is called without any spank_fabric environment variable set
 if [[ -z "$SPANK_FABRIC_PARTITION_CREATE_ADHOC" &&
       -z "$SPANK_FABRIC_PARTITION_JOIN" &&
       -z "$SPANK_FABRIC_BIND_MPI" ]]; then
@@ -82,10 +82,10 @@ NETID=$((10 << 24))
 for TAG in ${!TAGS[*]}; do
     echo "# Subnet for TAG $TAG starting at $(printIPv4 $NETID)"
     NODES=${TAGS[$TAG]}
-    echo $(printIPv4 $NETID) $TAG-net $TAG-net.pdc.kth.se
+    echo $(printIPv4 $NETID) $TAG-net $TAG-net.${SFS_FABRIC_DOMAIN}
     HOSTID=1
     for NODE in ${NODES//,/ }; do
-	echo $(printIPv4 $((HOSTID + NETID))) $NODE-$TAG $NODE-$TAG.pdc.kth.se
+	echo $(printIPv4 $((HOSTID + NETID))) $NODE-$TAG $NODE-$TAG.${SFS_FABRIC_DOMAIN}
 	INVMASK=$((INVMASK | HOSTID))
 	HOSTID=$((HOSTID + 1))
     done
